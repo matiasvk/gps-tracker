@@ -459,35 +459,34 @@ footer span {
     background-color: #718096;
   }
 
-  /* Red Glow State when Tracking */
-  .gps-pill.is-tracking {
-    background-color: rgba(239, 68, 68, 0.15); /* Soft transparent red */
-    color: #ef4444; /* Vivid red text */
-    border: 1px solid rgba(239, 68, 68, 0.5);
-    box-shadow:
-      0 0 15px rgba(239, 68, 68, 0.6),
-      0 0 5px rgba(239, 68, 68, 0.4);
-  }
+}
 
-  .gps-pill.is-tracking .dot {
-    background-color: #ef4444;
-    box-shadow: 0 0 8px #ef4444;
-    animation: pulse-red 1.5s infinite;
-  }
+.gps-pill.is-tracking {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  box-shadow:
+    0 0 15px rgba(239, 68, 68, 0.6),
+    0 0 5px rgba(239, 68, 68, 0.4);
+}
 
-  /* Optional: Smooth Pulsing animation for the red dot */
-  @keyframes pulse-red {
-    0% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.4;
-      transform: scale(1.2);
-    }
-    100% {
-      opacity: 1;
-      transform: scale(1);
-    }
+.gps-pill.is-tracking .dot {
+  background-color: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+  animation: pulse-red 1.5s infinite;
+}
+
+@keyframes pulse-red {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
   }
 }
