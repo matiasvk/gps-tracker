@@ -161,11 +161,17 @@ export default function App() {
 
   return (
     <main className="app-shell">
-      <header className="topbar">
-        <div className="brand-mark"><Route size={23} /></div>
-        <div><div className="brand-name">stride<span>.</span></div><div className="brand-sub">GPS ACTIVITY TRACKER</div></div>
-        <div className={`gps-pill ${status === "running" ? "is-live" : ""}`}><span className="dot" />{status === "running" ? "TRACKING" : status === "paused" ? "PAUSED" : "GPS READY"}</div>
-      </header>
+     <header className="topbar">
+  <div className="brand-mark"><Route size={23} /></div>
+  <div>
+    <div className="brand-name">stride<span>.</span></div>
+    <div className="brand-sub">GPS ACTIVITY TRACKER</div>
+  </div>
+  <div className={`gps-pill ${status === "running" ? "is-tracking" : status === "paused" ? "is-paused" : ""}`}>
+    <span className="dot" />
+    {status === "running" ? "TRACKING" : status === "paused" ? "PAUSED" : "GPS READY"}
+  </div>
+</header>
 
       <section className="hero panel">
         <div className="section-eyebrow"><Activity size={15} /> CURRENT SPEED</div>
