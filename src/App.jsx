@@ -69,20 +69,25 @@ export default function App() {
       }
       const current = { latitude: c.latitude, longitude: c.longitude, timestamp: position.timestamp };
       let nextSpeed = Number.isFinite(c.speed) && c.speed >= 0 ? c.speed * 3.6 : 0;
-      if (lastPosition.current) {
-        const prev = lastPosition.current;
-        const km = haversineKm(prev, current);
-        const seconds = Math.max(0.1, (current.timestamp - prev.timestamp) / 1000);
-        const calculatedKmh = km / seconds * 3600;
-        // Ignore likely GPS jumps; don't add tiny stationary GPS drift.
-        if (km <= 0.15 && calculatedKmh <= 180 && c.accuracy <= 60) {
-          if (km >= 0.003 && calculatedKmh > 0.8) {
-            distanceRef.current += km;
-            setDistance(distanceRef.current);
-          }
-          if (!Number.isFinite(c.speed) || c.speed < 0) nextSpeed = calculatedKmh < 2 ? 0 : calculatedKmh;
-        }
-      }
+     if (lastPosition.current) {
+  const prev = lastPosition.current;
+  const km = haversineKm(prev, current);
+  const seconds = Math.max(0.5, (current.timestamp - prev.timestamp) / 1000);
+  const calculatedKmh = (km / seconds) * 3600;
+
+  // 1. Cap maximum plausible speed (e.g. 150 km/h) to discard teleportation jumps
+  // 2. Allow smaller real movements down to 1 meter (0.001 km)
+  if (calculatedKmh <= 150) {
+    if (km >= 0.001) { 
+      distanceRef.current += km;
+      setDistance(distanceRef.current);
+    }
+    
+    if (!Number.isFinite(c.speed) || c.speed < 0) {
+      nextSpeed = calculatedKmh < 0.5 ? 0 : calculatedKmh;
+    }
+  }
+}
       lastPosition.current = current;
       if (nextSpeed > 180) nextSpeed = 0;
       speedRef.current = nextSpeed;
