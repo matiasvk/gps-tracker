@@ -163,28 +163,29 @@ export default function App() {
       };
       let nextSpeed = Number.isFinite(c.speed) && c.speed >= 0 ? c.speed * 3.6 : 0;
       let shouldRecord = true;
-     if (lastPosition.current) {
-  const prev = lastPosition.current;
-  const km = haversineKm(prev, current);
-  const seconds = Math.max(0.5, (current.timestamp - prev.timestamp) / 1000);
-  const calculatedKmh = (km / seconds) * 3600;
+      if (lastPosition.current) {
+        const prev = lastPosition.current;
+        const km = haversineKm(prev, current);
+        const seconds = Math.max(
+          0.5,
+          (Date.parse(current.timestamp) - Date.parse(prev.timestamp)) / 1000
+        );
+        const calculatedKmh = (km / seconds) * 3600;
 
-  // 1. Cap maximum plausible speed (e.g. 150 km/h) to discard teleportation jumps
-  // 2. Allow smaller real movements down to 1 meter (0.001 km)
-  if (calculatedKmh <= 150) {
-    if (km >= 0.001) { 
-      distanceRef.current += km;
-      setDistance(distanceRef.current);
-    }
-    
-    if (!Number.isFinite(c.speed) || c.speed < 0) {
-      nextSpeed = calculatedKmh < 0.5 ? 0 : calculatedKmh;
-    }
-  } else {
-    shouldRecord = false;
-    nextSpeed = 0;
-  }
-}
+        if (calculatedKmh <= 150) {
+          if (km >= 0.001) {
+            distanceRef.current += km;
+            setDistance(distanceRef.current);
+          }
+
+          if (!Number.isFinite(c.speed) || c.speed < 0) {
+            nextSpeed = calculatedKmh < 0.5 ? 0 : calculatedKmh;
+          }
+        } else {
+          shouldRecord = false;
+          nextSpeed = 0;
+        }
+      }
       if (shouldRecord) {
         lastPosition.current = current;
         setTrackPoints((points) => [...points, { ...current, segment: trackSegment.current }]);
