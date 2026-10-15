@@ -108,6 +108,7 @@ export default function App() {
   const [speed, setSpeed] = useState(0);
   const [distance, setDistance] = useState(0);
   const [elapsed, setElapsed] = useState(0);
+  const [movingElapsed, setMovingElapsed] = useState(0);
   const [accuracy, setAccuracy] = useState(null);
   const [message, setMessage] = useState("Ready when you are");
   const [history, setHistory] = useState(() => {
@@ -120,6 +121,7 @@ export default function App() {
   const watchId = useRef(null);
   const lastPosition = useRef(null);
   const distanceRef = useRef(0);
+  const movingElapsedRef = useRef(0);
   const speedRef = useRef(0);
   const startedAt = useRef(null);
   const elapsedBeforePause = useRef(0);
@@ -173,6 +175,11 @@ export default function App() {
         const calculatedKmh = (km / seconds) * 3600;
 
         if (calculatedKmh <= 150) {
+          if (calculatedKmh >= 0.5) {
+            movingElapsedRef.current += seconds;
+            setMovingElapsed(movingElapsedRef.current);
+          }
+
           if (km >= 0.001) {
             distanceRef.current += km;
             setDistance(distanceRef.current);
@@ -212,12 +219,13 @@ export default function App() {
       return;
     }
     distanceRef.current = 0;
+    movingElapsedRef.current = 0;
     speedRef.current = 0;
     lastPosition.current = null;
     trackSegment.current = 0;
     elapsedBeforePause.current = 0;
     startedAt.current = Date.now();
-    setDistance(0); setSpeed(0); setElapsed(0); setMaxSpeed(0); setAccuracy(null);
+    setDistance(0); setSpeed(0); setElapsed(0); setMovingElapsed(0); setMaxSpeed(0); setAccuracy(null);
     setTrackPoints([]);
     setSelectedRouteId("current");
     setActiveSince(Date.now());
@@ -247,16 +255,19 @@ export default function App() {
         date: new Date().toISOString(),
         distance: distanceRef.current,
         duration: finalElapsed,
-        avgSpeed: finalElapsed > 0 ? distanceRef.current / (finalElapsed / 3600) : 0,
+        avgSpeed: movingElapsedRef.current > 0
+          ? distanceRef.current / (movingElapsedRef.current / 3600)
+          : 0,
         maxSpeed,
         trackPoints
       };
       setHistory(old => [trip, ...old].slice(0, 100));
       setSelectedRouteId(trip.id);
     }
-    setStatus("idle"); setSpeed(0); setDistance(0); setElapsed(0); setMaxSpeed(0);
+    setStatus("idle"); setSpeed(0); setDistance(0); setElapsed(0); setMovingElapsed(0); setMaxSpeed(0);
     setActiveSince(null); setAccuracy(null); setMessage("Trip saved. Ready for another?");
     distanceRef.current = 0; lastPosition.current = null; startedAt.current = null;
+    movingElapsedRef.current = 0;
     elapsedBeforePause.current = 0;
   };
 
@@ -269,7 +280,7 @@ export default function App() {
 
   useEffect(() => () => stopWatching(), []);
 
-  const avgSpeed = elapsed > 0 ? distance / (elapsed / 3600) : 0;
+  const avgSpeed = movingElapsed > 0 ? distance / (movingElapsed / 3600) : 0;
   const selectedTrip = history.find((trip) => trip.id === selectedRouteId) ?? history[0] ?? null;
   const showingCurrentRoute = status !== "idle" && selectedRouteId === "current";
   const displayedPoints = showingCurrentRoute ? trackPoints : selectedTrip?.trackPoints ?? [];
@@ -312,7 +323,7 @@ export default function App() {
       </section>
 
       <section className="stats-row panel">
-        <div><span className="stat-label"><Gauge size={14} /> AVERAGE SPEED</span><strong>{avgSpeed.toFixed(1)} <small>km/h</small></strong></div>
+        <div><span className="stat-label"><Gauge size={14} /> MOVING AVG SPEED</span><strong>{avgSpeed.toFixed(1)} <small>km/h</small></strong></div>
         <div className="stat-divider" />
         <div><span className="stat-label"><Activity size={14} /> TOP SPEED</span><strong>{maxSpeed.toFixed(1)} <small>km/h</small></strong></div>
       </section>
@@ -352,7 +363,7 @@ export default function App() {
       <section className="history-section">
         <div className="history-heading"><div><div className="section-eyebrow">YOUR ACTIVITY</div><h2>Trip history <span>{history.length}</span></h2></div>{history.length > 0 && <button className="clear-btn" onClick={clearHistory}><Trash2 size={14} /> Clear</button>}</div>
         {history.length === 0 ? <div className="empty-state panel"><div className="empty-icon"><Route size={23} /></div><strong>No trips yet</strong><p>Your completed trips will show up here.</p></div> :
-          <div className="trip-list">{history.map(trip => <article className={`trip-card panel ${selectedRouteId === trip.id ? "is-selected" : ""}`} key={trip.id}><div className="trip-icon"><Route size={18} /></div><div className="trip-main"><strong>{fmtDistance(trip.distance)} km</strong><span>{new Date(trip.date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })} · {fmtTime(trip.duration)}</span></div><div className="trip-right"><strong>{trip.avgSpeed.toFixed(1)} <small>km/h</small></strong><span>avg speed</span></div><button className="trip-map-btn" aria-label="View trip route" title={trip.trackPoints?.length ? "View route" : "No GPS route saved"} disabled={!trip.trackPoints?.length} onClick={() => setSelectedRouteId(trip.id)}><MapPinned size={16} /></button></article>)}</div>}
+          <div className="trip-list">{history.map(trip => <article className={`trip-card panel ${selectedRouteId === trip.id ? "is-selected" : ""}`} key={trip.id}><div className="trip-icon"><Route size={18} /></div><div className="trip-main"><strong>{fmtDistance(trip.distance)} km</strong><span>{new Date(trip.date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })} · {fmtTime(trip.duration)}</span></div><div className="trip-right"><strong>{trip.avgSpeed.toFixed(1)} <small>km/h</small></strong><span>moving avg</span></div><button className="trip-map-btn" aria-label="View trip route" title={trip.trackPoints?.length ? "View route" : "No GPS route saved"} disabled={!trip.trackPoints?.length} onClick={() => setSelectedRouteId(trip.id)}><MapPinned size={16} /></button></article>)}</div>}
       </section>
       <footer>MADE FOR THE JOURNEY <span>·</span> GPS-POWERED</footer>
     </main>
